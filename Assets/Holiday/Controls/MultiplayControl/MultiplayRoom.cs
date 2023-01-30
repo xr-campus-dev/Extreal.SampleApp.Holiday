@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using Extreal.Integration.Multiplay.NGO;
 using Extreal.SampleApp.Holiday.MultiplayCommon;
@@ -10,20 +12,27 @@ using Unity.Netcode;
 
 namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
 {
-    public class MultiplayRoom : IDisposable
+    public class MultiplayRoom : DisposableBase
     {
         public IObservable<Unit> OnConnectionApprovalRejected => ngoClient.OnConnectionApprovalRejected;
         public IObservable<Unit> OnUnexpectedDisconnected => ngoClient.OnUnexpectedDisconnected;
 
         public IObservable<Unit> OnConnectFailed => onConnectFailed;
+        [SuppressMessage("Usage", "CC0033")]
         private readonly Subject<Unit> onConnectFailed = new Subject<Unit>();
 
         public IObservable<bool> IsPlayerSpawned => isPlayerSpawned;
+
+        [SuppressMessage("Usage", "CC0033")]
         private readonly BoolReactiveProperty isPlayerSpawned = new BoolReactiveProperty(false);
 
         private readonly NgoClient ngoClient;
         private readonly NgoConfig ngoConfig;
+
+        [SuppressMessage("Usage", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
+
+        [SuppressMessage("Usage", "CC0033")]
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(MultiplayRoom));
@@ -47,14 +56,13 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
                 .AddTo(disposables);
         }
 
-        public void Dispose()
+        protected override void ReleaseManagedResources()
         {
             cts.Cancel();
             cts.Dispose();
             onConnectFailed.Dispose();
             isPlayerSpawned.Dispose();
             disposables.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         public async UniTask JoinAsync(string avatarAssetName)
@@ -79,7 +87,7 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
         public async UniTask LeaveAsync()
             => await ngoClient.DisconnectAsync();
 
-        public void SendPlayerSpawn(string avatarAssetName)
+        private void SendPlayerSpawn(string avatarAssetName)
         {
             if (Logger.IsDebug())
             {

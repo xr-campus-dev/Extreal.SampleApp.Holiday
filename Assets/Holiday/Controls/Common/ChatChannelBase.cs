@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Extreal.Core.Common.System;
 using Extreal.Integration.Chat.Vivox;
 using Extreal.SampleApp.Holiday.Controls.TextChatControl;
 using UniRx;
@@ -8,9 +10,11 @@ using VivoxUnity;
 
 namespace Extreal.SampleApp.Holiday.Controls.Common
 {
-    public abstract class ChatChannelBase : IDisposable
+    public abstract class ChatChannelBase : DisposableBase
     {
         public IObservable<bool> OnConnected => onConnected;
+
+        [SuppressMessage("Usage", "CC0033")]
         private readonly BoolReactiveProperty onConnected = new BoolReactiveProperty(false);
 
         public IObservable<Unit> OnUnexpectedDisconnected
@@ -19,15 +23,18 @@ namespace Extreal.SampleApp.Holiday.Controls.Common
                 .Select(_ => Unit.Default);
 
         public IObservable<Unit> OnConnectFailed => onConnectFailed;
+        [SuppressMessage("Usage", "CC0033")]
         private readonly Subject<Unit> onConnectFailed = new Subject<Unit>();
 
         private readonly VivoxClient vivoxClient;
         private readonly string channelName;
 
         protected ChannelId ChannelId { get; private set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeCracker", "CC0022")]
+
+        [SuppressMessage("Usage", "CC0022")]
         protected CompositeDisposable Disposables { get; } = new CompositeDisposable();
 
+        [SuppressMessage("Usage", "CC0033")]
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
         protected ChatChannelBase(VivoxClient vivoxClient, string channelName)
@@ -49,6 +56,7 @@ namespace Extreal.SampleApp.Holiday.Controls.Common
                 {
                     return;
                 }
+
                 onConnected.Value = true;
             }
 
@@ -105,14 +113,13 @@ namespace Extreal.SampleApp.Holiday.Controls.Common
             vivoxClient.Disconnect(ChannelId);
         }
 
-        public void Dispose()
+        protected override void ReleaseManagedResources()
         {
             cts.Cancel();
             cts.Dispose();
             Disposables.Dispose();
             onConnected.Dispose();
             onConnectFailed.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }
