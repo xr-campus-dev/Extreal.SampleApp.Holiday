@@ -14,24 +14,30 @@ namespace Extreal.SampleApp.Holiday.Controls.TextChatControl
         private readonly VivoxClient vivoxClient;
         private readonly TextChatControlView textChatControlView;
         private readonly AppState appState;
+        private readonly AssetHelper assetHelper;
 
         private TextChatChannel textChatChannel;
 
-        public TextChatControlPresenter(
+        public TextChatControlPresenter
+        (
             StageNavigator<StageName, SceneName> stageNavigator,
             VivoxClient vivoxClient,
             TextChatControlView textChatControlView,
-            AppState appState) : base(stageNavigator)
+            AppState appState,
+            AssetHelper assetHelper
+        ) : base(stageNavigator)
         {
             this.vivoxClient = vivoxClient;
             this.textChatControlView = textChatControlView;
             this.appState = appState;
+            this.assetHelper = assetHelper;
         }
 
         [SuppressMessage("CodeCracker", "CC0020")]
-        protected override void Initialize(StageNavigator<StageName, SceneName> stageNavigator, CompositeDisposable sceneDisposables) =>
-            textChatControlView.OnSendButtonClicked
-                .Subscribe(message => textChatChannel.SendMessage(message)).AddTo(sceneDisposables);
+        protected override void Initialize(StageNavigator<StageName, SceneName> stageNavigator, CompositeDisposable sceneDisposables)
+            => textChatControlView.OnSendButtonClicked
+                .Subscribe(message => textChatChannel.SendMessage(message))
+                .AddTo(sceneDisposables);
 
         protected override void OnStageEntered(StageName stageName, CompositeDisposable stageDisposables)
         {
@@ -39,7 +45,7 @@ namespace Extreal.SampleApp.Holiday.Controls.TextChatControl
             stageDisposables.Add(textChatChannel);
 
             textChatChannel.OnConnected
-                .Subscribe(appState.SetInText)
+                .Subscribe(appState.SetTextChatReady)
                 .AddTo(stageDisposables);
 
             textChatChannel.OnMessageReceived
@@ -47,11 +53,11 @@ namespace Extreal.SampleApp.Holiday.Controls.TextChatControl
                 .AddTo(stageDisposables);
 
             textChatChannel.OnUnexpectedDisconnected
-                .Subscribe(_ => appState.SetNotification("Unexpected disconnection from vivox server has occurred"))
+                .Subscribe(_ => appState.Notify(assetHelper.MessageConfig.ChatUnexpectedDisconnectedErrorMessage))
                 .AddTo(stageDisposables);
 
             textChatChannel.OnConnectFailed
-                .Subscribe(_ => appState.SetNotification("Connection to vivox server is failed"))
+                .Subscribe(_ => appState.Notify(assetHelper.MessageConfig.ChatConnectFailedErrorMessage))
                 .AddTo(stageDisposables);
 
             textChatChannel.JoinAsync().Forget();
@@ -59,7 +65,7 @@ namespace Extreal.SampleApp.Holiday.Controls.TextChatControl
 
         protected override void OnStageExiting(StageName stageName)
         {
-            appState.SetInText(false);
+            appState.SetTextChatReady(false);
             textChatChannel.Leave();
         }
     }

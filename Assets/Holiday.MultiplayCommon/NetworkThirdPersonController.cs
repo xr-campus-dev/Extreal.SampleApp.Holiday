@@ -111,6 +111,40 @@ namespace Extreal.SampleApp.Holiday.MultiplayCommon
 
         private bool _hasAnimator;
 
+        public NetworkVariable<NetworkString> AvatarAssetName { get; set; }
+            = new NetworkVariable<NetworkString>(writePerm: NetworkVariableWritePermission.Owner);
+
+        public void SetAvatar(Avatar avatar, bool restore = false)
+        {
+            if (!_hasAnimator)
+            {
+                _hasAnimator = TryGetComponent(out _animator);
+            }
+
+            float speed = default, motionSpeed = default;
+            bool grounded = default, jump = default, freeFall = default;
+
+            if (restore)
+            {
+                speed = _animator.GetFloat(_animIDSpeed);
+                grounded = _animator.GetBool(_animIDGrounded);
+                jump = _animator.GetBool(_animIDJump);
+                freeFall = _animator.GetBool(_animIDFreeFall);
+                motionSpeed = _animator.GetFloat(_animIDMotionSpeed);
+            }
+
+            _animator.avatar = avatar;
+
+            if (restore)
+            {
+                _animator.SetFloat(_animIDSpeed, speed);
+                _animator.SetBool(_animIDGrounded, grounded);
+                _animator.SetBool(_animIDJump, jump);
+                _animator.SetBool(_animIDFreeFall, freeFall);
+                _animator.SetFloat(_animIDMotionSpeed, motionSpeed);
+            }
+        }
+
         private bool IsCurrentDeviceMouse
         {
             get

@@ -13,18 +13,23 @@ namespace Extreal.SampleApp.Holiday.Controls.VoiceChatControl
         private readonly VivoxClient vivoxClient;
         private readonly VoiceChatControlView voiceChatScreenView;
         private readonly AppState appState;
+        private readonly AssetHelper assetHelper;
 
         private VoiceChatChannel voiceChatChannel;
 
-        public VoiceChatControlPresenter(
+        public VoiceChatControlPresenter
+        (
             StageNavigator<StageName, SceneName> stageNavigator,
             VivoxClient vivoxClient,
             VoiceChatControlView voiceChatScreenView,
-            AppState appState) : base(stageNavigator)
+            AppState appState,
+            AssetHelper assetHelper
+        ) : base(stageNavigator)
         {
             this.vivoxClient = vivoxClient;
             this.voiceChatScreenView = voiceChatScreenView;
             this.appState = appState;
+            this.assetHelper = assetHelper;
         }
 
         protected override void Initialize(
@@ -39,7 +44,7 @@ namespace Extreal.SampleApp.Holiday.Controls.VoiceChatControl
             stageDisposables.Add(voiceChatChannel);
 
             voiceChatChannel.OnConnected
-                .Subscribe(appState.SetInAudio)
+                .Subscribe(appState.SetVoiceChatReady)
                 .AddTo(stageDisposables);
 
             voiceChatChannel.OnMuted
@@ -47,11 +52,11 @@ namespace Extreal.SampleApp.Holiday.Controls.VoiceChatControl
                 .AddTo(stageDisposables);
 
             voiceChatChannel.OnUnexpectedDisconnected
-                .Subscribe(_ => appState.SetNotification("Unexpected disconnection from vivox server has occurred"))
+                .Subscribe(_ => appState.Notify(assetHelper.MessageConfig.ChatUnexpectedDisconnectedErrorMessage))
                 .AddTo(stageDisposables);
 
             voiceChatChannel.OnConnectFailed
-                .Subscribe(_ => appState.SetNotification("Connection to vivox server is failed"))
+                .Subscribe(_ => appState.Notify(assetHelper.MessageConfig.ChatConnectFailedErrorMessage))
                 .AddTo(stageDisposables);
 
             voiceChatChannel.JoinAsync().Forget();
@@ -59,7 +64,7 @@ namespace Extreal.SampleApp.Holiday.Controls.VoiceChatControl
 
         protected override void OnStageExiting(StageName stageName)
         {
-            appState.SetInAudio(false);
+            appState.SetVoiceChatReady(false);
             voiceChatChannel.Leave();
         }
     }

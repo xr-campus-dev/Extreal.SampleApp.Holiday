@@ -3,33 +3,29 @@ using Cysharp.Threading.Tasks;
 #endif
 using Extreal.Core.Logging;
 using Extreal.Core.StageNavigation;
-using Extreal.Integration.Chat.Vivox;
-using Extreal.Integration.Multiplay.NGO;
-using Extreal.SampleApp.Holiday.App.Avatars;
+using Extreal.SampleApp.Holiday.App.Common;
 using Extreal.SampleApp.Holiday.App.Config;
-using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using VContainer;
+using VContainer.Unity;
 #if UNITY_ANDROID
 using UnityEngine.Android;
 #endif
-using VContainer;
-using VContainer.Unity;
-using LogLevel = Extreal.Core.Logging.LogLevel;
 
 namespace Extreal.SampleApp.Holiday.App
 {
     public class AppScope : LifetimeScope
     {
         [SerializeField] private StageConfig stageConfig;
-        [SerializeField] private BuiltinAvatarRepository builtinAvatarRepository;
-        [SerializeField] private MultiplayConfig multiplayConfig;
-        [SerializeField] private NetworkManager networkManager;
-        [SerializeField] private ChatConfig chatConfig;
 
         private static void InitializeApp()
         {
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
+            Addressables.ResourceManager.WebRequestOverride = unityWebRequest => unityWebRequest.timeout = 5;
+
+            ClearAssetBundleCacheOnDev();
 
             var logLevel = InitializeLogging();
             InitializeMicrophone();
@@ -69,6 +65,13 @@ namespace Extreal.SampleApp.Holiday.App
 #endif
         }
 
+        private static void ClearAssetBundleCacheOnDev()
+        {
+#if !HOLIDAY_PROD
+            Caching.ClearCache();
+#endif
+        }
+
         protected override void Awake()
         {
             InitializeApp();
@@ -80,17 +83,10 @@ namespace Extreal.SampleApp.Holiday.App
             builder.RegisterComponent(stageConfig).AsImplementedInterfaces();
             builder.Register<StageNavigator<StageName, SceneName>>(Lifetime.Singleton);
 
-            builder.RegisterComponent(builtinAvatarRepository).AsImplementedInterfaces();
-            builder.Register<AvatarService>(Lifetime.Singleton);
-
-            builder.RegisterComponent(multiplayConfig.ToNgoConfig());
-            builder.RegisterComponent(networkManager);
-            builder.Register<NgoClient>(Lifetime.Singleton);
-
-            builder.RegisterComponent(chatConfig.ToVivoxAppConfig());
-            builder.Register<VivoxClient>(Lifetime.Singleton);
-
             builder.Register<AppState>(Lifetime.Singleton);
+
+            builder.Register<AssetProvider>(Lifetime.Singleton);
+            builder.Register<AssetHelper>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<AppPresenter>();
         }

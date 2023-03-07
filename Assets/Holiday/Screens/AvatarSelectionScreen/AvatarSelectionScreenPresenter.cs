@@ -1,9 +1,7 @@
 ﻿using System.Linq;
-using Cysharp.Threading.Tasks;
 using Extreal.Core.Logging;
 using Extreal.Core.StageNavigation;
 using Extreal.SampleApp.Holiday.App;
-using Extreal.SampleApp.Holiday.App.Avatars;
 using Extreal.SampleApp.Holiday.App.Common;
 using Extreal.SampleApp.Holiday.App.Config;
 using UniRx;
@@ -14,21 +12,21 @@ namespace Extreal.SampleApp.Holiday.Screens.AvatarSelectionScreen
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(AvatarSelectionScreenPresenter));
 
-        private readonly AvatarService avatarService;
         private readonly AvatarSelectionScreenView avatarSelectionScreenView;
         private readonly AppState appState;
+        private readonly AssetHelper assetHelper;
 
         public AvatarSelectionScreenPresenter
         (
             StageNavigator<StageName, SceneName> stageNavigator,
-            AvatarService avatarService,
             AvatarSelectionScreenView avatarSelectionScreenView,
-            AppState appState
+            AppState appState,
+            AssetHelper assetHelper
         ) : base(stageNavigator)
         {
             this.avatarSelectionScreenView = avatarSelectionScreenView;
-            this.avatarService = avatarService;
             this.appState = appState;
+            this.assetHelper = assetHelper;
         }
 
         protected override void Initialize(
@@ -41,19 +39,19 @@ namespace Extreal.SampleApp.Holiday.Screens.AvatarSelectionScreen
             avatarSelectionScreenView.OnAvatarChanged
                 .Subscribe(avatarName =>
                 {
-                    var avatar = avatarService.FindAvatarByName(avatarName);
+                    var avatar = assetHelper.AvatarConfig.Avatars.First(avatar => avatar.Name == avatarName);
                     appState.SetAvatar(avatar);
                 })
                 .AddTo(sceneDisposables);
 
             avatarSelectionScreenView.OnGoButtonClicked
-                .Subscribe(_ => stageNavigator.ReplaceAsync(StageName.VirtualStage).Forget())
+                .Subscribe(_ => assetHelper.DownloadSpaceAssetAsync("VirtualSpace", StageName.VirtualStage))
                 .AddTo(sceneDisposables);
         }
 
         protected override void OnStageEntered(StageName stageName, CompositeDisposable stageDisposables)
         {
-            var avatars = avatarService.Avatars;
+            var avatars = assetHelper.AvatarConfig.Avatars;
             if (appState.Avatar.Value == null)
             {
                 appState.SetAvatar(avatars.First());

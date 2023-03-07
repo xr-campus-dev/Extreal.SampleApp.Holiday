@@ -2,114 +2,120 @@
 using System.Diagnostics.CodeAnalysis;
 using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
-using Extreal.SampleApp.Holiday.App.Avatars;
+using Extreal.SampleApp.Holiday.App.Config;
+using Extreal.SampleApp.Holiday.Screens.ConfirmationScreen;
 using UniRx;
 
 namespace Extreal.SampleApp.Holiday.App
 {
+    [SuppressMessage("Usage", "CC0033")]
     public class AppState : DisposableBase
     {
         private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(AppState));
 
-        public IReadOnlyReactiveProperty<string> PlayerName => playerName;
-        [SuppressMessage("Usage", "CC0033")]
+        public IReadOnlyReactiveProperty<string> PlayerName => playerName.AddTo(disposables);
         private readonly ReactiveProperty<string> playerName = new ReactiveProperty<string>("Guest");
 
-        public IReadOnlyReactiveProperty<Avatar> Avatar => avatar;
-        [SuppressMessage("Usage", "CC0033")]
-        private readonly ReactiveProperty<Avatar> avatar = new ReactiveProperty<Avatar>();
+        public IReadOnlyReactiveProperty<AvatarConfig.Avatar> Avatar => avatar.AddTo(disposables);
+        private readonly ReactiveProperty<AvatarConfig.Avatar> avatar = new ReactiveProperty<AvatarConfig.Avatar>(null);
 
-        public IObservable<bool> IsPlaying => isPlaying;
-        [SuppressMessage("Usage", "CC0033")]
-        private readonly BoolReactiveProperty isPlaying = new BoolReactiveProperty(false);
+        public IReadOnlyReactiveProperty<string> SpaceName => spaceName.AddTo(disposables);
+        private readonly ReactiveProperty<string> spaceName = new ReactiveProperty<string>(null);
 
-        public IObservable<string> OnNotificationReceived => onNotificationReceived;
-        [SuppressMessage("Usage", "CC0033")]
+        public IReadOnlyReactiveProperty<bool> PlayingReady => playingReady.AddTo(disposables);
+        private readonly ReactiveProperty<bool> playingReady = new ReactiveProperty<bool>(false);
+
+        public IReadOnlyReactiveProperty<bool> SpaceReady => spaceReady.AddTo(disposables);
+        private readonly ReactiveProperty<bool> spaceReady = new ReactiveProperty<bool>(false);
+
+        public IObservable<string> OnNotificationReceived => onNotificationReceived.AddTo(disposables);
         private readonly Subject<string> onNotificationReceived = new Subject<string>();
 
-        [SuppressMessage("Usage", "CC0033")]
-        private readonly BoolReactiveProperty inMultiplay = new BoolReactiveProperty(false);
-        [SuppressMessage("Usage", "CC0033")]
-        private readonly BoolReactiveProperty inText = new BoolReactiveProperty(false);
-        [SuppressMessage("Usage", "CC0033")]
-        private readonly BoolReactiveProperty inAudio = new BoolReactiveProperty(false);
+        public IObservable<Confirmation> OnConfirmationReceived => onConfirmationReceived.AddTo(disposables);
+        private readonly Subject<Confirmation> onConfirmationReceived = new Subject<Confirmation>();
 
-        [SuppressMessage("Usage", "CC0033")]
+        private readonly BoolReactiveProperty multiplayReady = new BoolReactiveProperty(false);
+        private readonly BoolReactiveProperty textChatReady = new BoolReactiveProperty(false);
+        private readonly BoolReactiveProperty voiceChatReady = new BoolReactiveProperty(false);
+
         private readonly CompositeDisposable disposables = new CompositeDisposable();
 
         public AppState()
         {
-            inMultiplay.Merge(inText, inAudio)
-                .Where(_ =>
-                {
-                    if (Logger.IsDebug())
-                    {
-                        Logger.LogDebug(
-                            $"inMultiplay: {inMultiplay.Value}, inText: {inText.Value}, inAudio: {inAudio.Value}");
-                    }
+            multiplayReady.AddTo(disposables);
+            textChatReady.AddTo(disposables);
+            voiceChatReady.AddTo(disposables);
 
-                    return inMultiplay.Value && inText.Value && inAudio.Value;
-                })
-                .Subscribe(_ =>
-                {
-                    if (Logger.IsDebug())
-                    {
-                        Logger.LogDebug("IsPlaying: true");
-                    }
-
-                    isPlaying.Value = true;
-                })
-                .AddTo(disposables);
-
-            inMultiplay.Merge(inText, inAudio)
-                .Where(_ =>
-                {
-                    if (Logger.IsDebug())
-                    {
-                        Logger.LogDebug(
-                            $"inMultiplay: {inMultiplay.Value}, inText: {inText.Value}, inAudio: {inAudio.Value}");
-                    }
-
-                    return !inMultiplay.Value && !inText.Value && !inAudio.Value;
-                })
-                .Subscribe(_ =>
-                {
-                    if (Logger.IsDebug())
-                    {
-                        Logger.LogDebug("IsPlaying: false");
-                    }
-
-                    isPlaying.Value = false;
-                })
-                .AddTo(disposables);
+            MonitorPlayingReadyStatus();
+            RestorePlayingReadyStatus();
         }
 
-        public void SetPlayerName(string playerName) => this.playerName.Value = playerName;
-        public void SetAvatar(Avatar avatar) => this.avatar.Value = avatar;
-        public void SetInMultiplay(bool value) => inMultiplay.Value = value;
-        public void SetInText(bool value) => inText.Value = value;
-        public void SetInAudio(bool value) => inAudio.Value = value;
+        private void MonitorPlayingReadyStatus() =>
+            multiplayReady.Merge(textChatReady, voiceChatReady, spaceReady)
+                .Where(_ =>
+                {
+                    LogWaitingStatus();
+                    return multiplayReady.Value && textChatReady.Value && voiceChatReady.Value && spaceReady.Value;
+                })
+                .Subscribe(_ =>
+                {
+                    if (Logger.IsDebug())
+                    {
+                        Logger.LogDebug("Ready to play");
+                    }
+                    playingReady.Value = true;
+                })
+                .AddTo(disposables);
 
-        public void SetNotification(string message)
+        private void RestorePlayingReadyStatus() =>
+            multiplayReady.Merge(textChatReady, voiceChatReady, spaceReady)
+                .Where(_ => !multiplayReady.Value && !textChatReady.Value && !voiceChatReady.Value && !spaceReady.Value)
+                .Subscribe(_ =>
+                {
+                    if (Logger.IsDebug())
+                    {
+                        Logger.LogDebug("Stop playing");
+                    }
+                    playingReady.Value = false;
+                })
+                .AddTo(disposables);
+
+        private void LogWaitingStatus()
         {
             if (Logger.IsDebug())
             {
-                Logger.LogDebug($"OnNotificationReceived: {message}");
+                Logger.LogDebug($"Multiplay, TextChat, VoiceChat, Space Ready: " +
+                                $"{multiplayReady.Value}, {textChatReady.Value}, " +
+                                $"{voiceChatReady.Value}, {spaceReady.Value}");
             }
+        }
 
+        public void SetPlayerName(string playerName) => this.playerName.Value = playerName;
+        public void SetAvatar(AvatarConfig.Avatar avatar) => this.avatar.Value = avatar;
+        public void SetSpaceName(string spaceName) => this.spaceName.Value = spaceName;
+        public void SetMultiplayReady(bool ready) => multiplayReady.Value = ready;
+        public void SetTextChatReady(bool ready) => textChatReady.Value = ready;
+        public void SetVoiceChatReady(bool ready) => voiceChatReady.Value = ready;
+        public void SetSpaceReady(bool ready) => spaceReady.Value = ready;
+
+        public void Notify(string message)
+        {
+            if (Logger.IsDebug())
+            {
+                Logger.LogDebug($"Notification received: {message}");
+            }
             onNotificationReceived.OnNext(message);
         }
 
-        protected override void ReleaseManagedResources()
+        public void Confirm(Confirmation confirmation)
         {
-            playerName.Dispose();
-            avatar.Dispose();
-            inMultiplay.Dispose();
-            inText.Dispose();
-            inAudio.Dispose();
-            isPlaying.Dispose();
-            onNotificationReceived.Dispose();
-            disposables.Dispose();
+            if (Logger.IsDebug())
+            {
+                Logger.LogDebug($"Confirmation received: {confirmation.Message}");
+            }
+            onConfirmationReceived.OnNext(confirmation);
         }
+
+        protected override void ReleaseManagedResources() => disposables.Dispose();
     }
 }
