@@ -6,10 +6,11 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
+using Extreal.Integration.Assets.Addressables;
 using Extreal.Integration.Multiplay.NGO;
+using Extreal.SampleApp.Holiday.App.AssetWorkflow;
 using Extreal.SampleApp.Holiday.App.Avatars;
-using Extreal.SampleApp.Holiday.App.Common;
-using Extreal.SampleApp.Holiday.MultiplayCommon;
+using Extreal.SampleApp.Holiday.Common.Multiplay;
 using UniRx;
 using Unity.Collections;
 using Unity.Netcode;
@@ -20,9 +21,6 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
 {
     public class MultiplayRoom : DisposableBase
     {
-        public IObservable<Unit> OnConnectionApprovalRejected => ngoClient.OnConnectionApprovalRejected;
-        public IObservable<Unit> OnUnexpectedDisconnected => ngoClient.OnUnexpectedDisconnected;
-
         public IObservable<Unit> OnConnectFailed => onConnectFailed;
         [SuppressMessage("Usage", "CC0033")]
         private readonly Subject<Unit> onConnectFailed = new Subject<Unit>();
@@ -34,7 +32,6 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
         private readonly NgoClient ngoClient;
         private readonly NgoConfig ngoConfig;
         private readonly AssetHelper assetHelper;
-        private readonly string avatarAssetName;
 
         [SuppressMessage("Usage", "CC0033")]
         private readonly CompositeDisposable disposables = new CompositeDisposable();
@@ -55,11 +52,13 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
             this.ngoClient = ngoClient;
             this.ngoConfig = ngoConfig;
             this.assetHelper = assetHelper;
-            this.avatarAssetName = avatarAssetName;
 
             this.ngoClient.OnConnected
                 .Subscribe(_ =>
-                    ngoClient.RegisterMessageHandler(MessageName.PlayerSpawned.ToString(), PlayerSpawnedMessageHandler))
+                {
+                    ngoClient.RegisterMessageHandler(MessageName.PlayerSpawned.ToString(), PlayerSpawnedMessageHandler);
+                    SendPlayerSpawn(avatarAssetName);
+                })
                 .AddTo(disposables);
 
             this.ngoClient.OnDisconnecting
@@ -75,32 +74,13 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
         {
             cts.Cancel();
             cts.Dispose();
-            onConnectFailed.Dispose();
             isPlayerSpawned.Dispose();
             disposables.Dispose();
         }
 
-        public async UniTask JoinAsync()
-        {
-            try
-            {
-                await ngoClient.ConnectAsync(ngoConfig, cts.Token);
-            }
-            catch (TimeoutException)
-            {
-                onConnectFailed.OnNext(Unit.Default);
-                return;
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
+        public async UniTaskVoid JoinAsync() => await ngoClient.ConnectAsync(ngoConfig, cts.Token);
 
-            SendPlayerSpawn(avatarAssetName);
-        }
-
-        public async UniTask LeaveAsync()
-            => await ngoClient.DisconnectAsync();
+        public async UniTaskVoid LeaveAsync() => await ngoClient.DisconnectAsync();
 
         private void SendPlayerSpawn(string avatarAssetName)
         {
@@ -128,7 +108,7 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
             }
         }
 
-        private async UniTask HandleOwnerAsync(SpawnedMessage spawnedMessage, NetworkObject spawnedObject)
+        private async UniTaskVoid HandleOwnerAsync(SpawnedMessage spawnedMessage, NetworkObject spawnedObject)
         {
             Controller(spawnedObject).AvatarAssetName.Value = spawnedMessage.AvatarAssetName;
             SetAvatarForExistingSpawnedObjects(ownerId: spawnedMessage.NetworkObjectId);

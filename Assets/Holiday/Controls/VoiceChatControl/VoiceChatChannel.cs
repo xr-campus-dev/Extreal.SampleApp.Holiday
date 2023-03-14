@@ -13,22 +13,17 @@ namespace Extreal.SampleApp.Holiday.Controls.VoiceChatControl
         [SuppressMessage("CodeCracker", "CC0033")]
         private readonly ReactiveProperty<bool> onMuted = new ReactiveProperty<bool>();
 
-        private readonly VivoxClient vivoxClient;
-
         public VoiceChatChannel(VivoxClient vivoxClient, string channelName) : base(vivoxClient, channelName)
+            => SetMuteAsync(true).Forget();
+
+        protected override VivoxChannelConfig CreateChannelConfig(string channelName)
+            => new VivoxChannelConfig(channelName, ChatType.AudioOnly);
+
+        public UniTaskVoid ToggleMuteAsync() => SetMuteAsync(!onMuted.Value);
+
+        private async UniTaskVoid SetMuteAsync(bool muted)
         {
-            this.vivoxClient = vivoxClient;
-            SetMuteAsync(true).Forget();
-        }
-
-        protected override UniTask ConnectAsync(string channelName)
-            => vivoxClient.ConnectAsync(new VivoxChannelConfig(channelName, ChatType.AudioOnly));
-
-        public UniTask ToggleMuteAsync() => SetMuteAsync(!onMuted.Value);
-
-        private async UniTask SetMuteAsync(bool muted)
-        {
-            var audioInputDevices = await vivoxClient.GetAudioInputDevicesAsync();
+            var audioInputDevices = await VivoxClient.GetAudioInputDevicesAsync();
             audioInputDevices.Muted = muted;
             onMuted.Value = muted;
         }

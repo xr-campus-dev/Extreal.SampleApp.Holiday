@@ -1,7 +1,6 @@
-﻿using Extreal.Core.Common.Retry;
-using Extreal.Integration.Chat.Vivox;
+﻿using Extreal.Integration.Chat.Vivox;
 using Extreal.Integration.Multiplay.NGO;
-using Extreal.SampleApp.Holiday.App.Common;
+using Extreal.SampleApp.Holiday.App.AssetWorkflow;
 using Unity.Netcode;
 using UnityEngine;
 using VContainer;
@@ -16,10 +15,11 @@ namespace Extreal.SampleApp.Holiday.Controls.ClientControl
 
         protected override void Configure(IContainerBuilder builder)
         {
-            builder.RegisterComponent(networkManager);
-            builder.Register<NgoClient>(Lifetime.Singleton).WithParameter(NoRetryStrategy.Instance);
-
             var assetHelper = Parent.Container.Resolve<AssetHelper>();
+
+            builder.RegisterComponent(networkManager);
+            builder.Register<NgoClient>(Lifetime.Singleton).WithParameter(assetHelper.NgoClientRetryStrategy);
+
             builder.RegisterComponent(assetHelper.VivoxAppConfig);
             builder.Register<VivoxClient>(Lifetime.Singleton);
 

@@ -2,6 +2,7 @@
 using Extreal.Core.Logging;
 using Extreal.Core.StageNavigation;
 using Extreal.SampleApp.Holiday.App;
+using Extreal.SampleApp.Holiday.App.AssetWorkflow;
 using Extreal.SampleApp.Holiday.App.Common;
 using Extreal.SampleApp.Holiday.App.Config;
 using UniRx;
@@ -38,7 +39,7 @@ namespace Extreal.SampleApp.Holiday.Controls.SpaceControl
         protected override void OnStageEntered(StageName stageName, CompositeDisposable stageDisposables)
             => LoadSpaceAsync(appState.SpaceName.Value, stageDisposables).Forget();
 
-        private async UniTask LoadSpaceAsync(string spaceName, CompositeDisposable stageDisposables)
+        private async UniTaskVoid LoadSpaceAsync(string spaceName, CompositeDisposable stageDisposables)
         {
             if (Logger.IsDebug())
             {
