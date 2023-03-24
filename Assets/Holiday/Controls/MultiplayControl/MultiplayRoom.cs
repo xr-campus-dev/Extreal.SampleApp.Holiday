@@ -6,7 +6,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
-using Extreal.Integration.Assets.Addressables;
+using Extreal.Integration.AssetWorkflow.Addressables;
 using Extreal.Integration.Multiplay.NGO;
 using Extreal.SampleApp.Holiday.App.AssetWorkflow;
 using Extreal.SampleApp.Holiday.App.Avatars;
@@ -21,10 +21,6 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
 {
     public class MultiplayRoom : DisposableBase
     {
-        public IObservable<Unit> OnConnectFailed => onConnectFailed;
-        [SuppressMessage("Usage", "CC0033")]
-        private readonly Subject<Unit> onConnectFailed = new Subject<Unit>();
-
         public IObservable<bool> IsPlayerSpawned => isPlayerSpawned;
         [SuppressMessage("Usage", "CC0033")]
         private readonly BoolReactiveProperty isPlayerSpawned = new BoolReactiveProperty(false);

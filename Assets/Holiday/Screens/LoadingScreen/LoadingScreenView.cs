@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using Extreal.Core.Logging;
-using Extreal.Integration.Assets.Addressables;
+using Extreal.Integration.AssetWorkflow.Addressables;
 using Extreal.SampleApp.Holiday.App;
 using TMPro;
 using UnityEngine;
@@ -25,26 +25,28 @@ namespace Extreal.SampleApp.Holiday.Screens.LoadingScreen
                 var status = isVisible ? "ON" : "OFF";
                 Logger.LogDebug($"Loading: {status}");
             }
-            ClearLoadedPercent();
-            screen.SetActive(isVisible);
-        }
-
-        public void SetDownloadStatus(NamedDownloadStatus status)
-        {
-            if (status.IsDone)
+            if (!isVisible)
             {
                 ClearLoadedPercent();
             }
-            else
-            {
-                var total = AppUtils.GetSizeUnit(status.TotalBytes);
-                var downloaded = AppUtils.GetSizeUnit(status.DownloadedBytes);
-                loadedPercent.text = $"{status.Percent * 100:F0}%" +
-                                     Environment.NewLine +
-                                     $"({downloaded.Item1}{downloaded.Item2}/{total.Item1}{total.Item2})";
-            }
+            screen.SetActive(isVisible);
         }
 
-        private void ClearLoadedPercent() => loadedPercent.text = string.Empty;
+        public void SetDownloadStatus(AssetDownloadStatus downloadStatus)
+        {
+            if (downloadStatus.Status.TotalBytes == 0L)
+            {
+                return;
+            }
+
+            var total = AppUtils.GetSizeUnit(downloadStatus.Status.TotalBytes);
+            var downloaded = AppUtils.GetSizeUnit(downloadStatus.Status.DownloadedBytes);
+            loadedPercent.text = $"{downloadStatus.Status.Percent * 100:F0}%" +
+                                 Environment.NewLine +
+                                 $"({downloaded.Item1}{downloaded.Item2}/{total.Item1}{total.Item2})";
+        }
+
+        private void ClearLoadedPercent()
+            => loadedPercent.text = string.Empty;
     }
 }

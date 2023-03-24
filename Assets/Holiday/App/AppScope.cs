@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using System.Diagnostics.CodeAnalysis;
 using Extreal.Core.Logging;
 using Extreal.Core.StageNavigation;
-using Extreal.Integration.Assets.Addressables;
 using Extreal.SampleApp.Holiday.App.AssetWorkflow;
 using Extreal.SampleApp.Holiday.App.Config;
 using Extreal.SampleApp.Holiday.Common.Config;
@@ -20,14 +19,15 @@ namespace Extreal.SampleApp.Holiday.App
 {
     public class AppScope : LifetimeScope
     {
+        [SerializeField] private AppConfig appConfig;
         [SerializeField] private LoggingConfig loggingConfig;
         [SerializeField] private StageConfig stageConfig;
 
         private void InitializeApp()
         {
-            QualitySettings.vSyncCount = 0;
-            Application.targetFrameRate = 60;
-            const int timeout = 5;
+            QualitySettings.vSyncCount = appConfig.VerticalSyncs;
+            Application.targetFrameRate = appConfig.TargetFrameRate;
+            var timeout = appConfig.DownloadTimeoutSeconds;
             Addressables.ResourceManager.WebRequestOverride = unityWebRequest => unityWebRequest.timeout = timeout;
 
             ClearAssetBundleCacheOnDev();
@@ -38,7 +38,8 @@ namespace Extreal.SampleApp.Holiday.App
             var logger = LoggingManager.GetLogger(nameof(AppScope));
             if (logger.IsDebug())
             {
-                logger.LogDebug($"targetFrameRate: {Application.targetFrameRate}, unityWebRequest.timeout: {timeout}, logLevel: {logLevel}");
+                logger.LogDebug(
+                    $"targetFrameRate: {Application.targetFrameRate}, unityWebRequest.timeout: {timeout}, logLevel: {logLevel}");
             }
         }
 
@@ -89,12 +90,13 @@ namespace Extreal.SampleApp.Holiday.App
 
         protected override void Configure(IContainerBuilder builder)
         {
+            builder.RegisterComponent(appConfig);
+
             builder.RegisterComponent(stageConfig).AsImplementedInterfaces();
             builder.Register<StageNavigator<StageName, SceneName>>(Lifetime.Singleton);
 
             builder.Register<AppState>(Lifetime.Singleton);
 
-            builder.Register<AssetProvider>(Lifetime.Singleton);
             builder.Register<AssetHelper>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<AppPresenter>();
