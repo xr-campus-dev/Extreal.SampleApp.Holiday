@@ -420,6 +420,8 @@ dotnet_naming_rule.parameters_rule.severity             = warning
 dotnet_diagnostic.IDE0044.severity = none
 # Move using directory into the namespace
 # dotnet_diagnostic.IDE0065.severity = none
+# Simplify 'null' check.
+dotnet_diagnostic.IDE0031.severity = none
 # Use local function instead of lambda
 dotnet_diagnostic.IDE0039.severity = none
 # Simplify 'new' expression

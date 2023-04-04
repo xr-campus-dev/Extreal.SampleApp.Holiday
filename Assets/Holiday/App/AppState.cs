@@ -6,6 +6,7 @@ using Extreal.SampleApp.Holiday.App.Config;
 using Extreal.SampleApp.Holiday.Controls.RetryStatusControl;
 using Extreal.SampleApp.Holiday.Screens.ConfirmationScreen;
 using UniRx;
+using UnityEngine;
 
 namespace Extreal.SampleApp.Holiday.App
 {
@@ -19,6 +20,9 @@ namespace Extreal.SampleApp.Holiday.App
 
         public IReadOnlyReactiveProperty<AvatarConfig.Avatar> Avatar => avatar.AddTo(disposables);
         private readonly ReactiveProperty<AvatarConfig.Avatar> avatar = new ReactiveProperty<AvatarConfig.Avatar>(null);
+
+        public IObservable<GameObject> MyAvatarPrefab => myAvatarPrefab.AddTo(disposables);
+        private readonly ReactiveProperty<GameObject> myAvatarPrefab = new ReactiveProperty<GameObject>();
 
         public IReadOnlyReactiveProperty<string> SpaceName => spaceName.AddTo(disposables);
         private readonly ReactiveProperty<string> spaceName = new ReactiveProperty<string>(null);
@@ -96,6 +100,7 @@ namespace Extreal.SampleApp.Holiday.App
 
         public void SetPlayerName(string playerName) => this.playerName.Value = playerName;
         public void SetAvatar(AvatarConfig.Avatar avatar) => this.avatar.Value = avatar;
+        public void SetAvatarPrefab(GameObject avatarPrefab) => myAvatarPrefab.Value = avatarPrefab;
         public void SetSpaceName(string spaceName) => this.spaceName.Value = spaceName;
         public void SetMultiplayReady(bool ready) => multiplayReady.Value = ready;
         public void SetTextChatReady(bool ready) => textChatReady.Value = ready;
