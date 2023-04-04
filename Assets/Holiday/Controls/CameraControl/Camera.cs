@@ -3,6 +3,7 @@ using Cinemachine;
 using UniRx;
 using Extreal.Core.Common.System;
 using UnityEngine;
+using Extreal.Core.Logging;
 
 namespace Extreal.SampleApp.Holiday.Controls.CameraControl
 {
@@ -17,6 +18,8 @@ namespace Extreal.SampleApp.Holiday.Controls.CameraControl
         private readonly Vector3 initDamping;
         private readonly Vector3 initShoulderOffset;
         private readonly float initCameraDistance;
+
+        private static readonly ELogger Logger = LoggingManager.GetLogger(nameof(Camera));
 
         public Camera(CinemachineVirtualCamera virtualCamera)
         {
@@ -49,6 +52,10 @@ namespace Extreal.SampleApp.Holiday.Controls.CameraControl
         {
             if (value)
             {
+                if (Logger.IsDebug())
+                {
+                    Logger.LogDebug("1st-person perspective");
+                }
                 thirdPersonFollow.Damping = Vector3.zero;
                 thirdPersonFollow.ShoulderOffset = Vector3.zero;
                 thirdPersonFollow.CameraDistance = 0f;
@@ -56,6 +63,10 @@ namespace Extreal.SampleApp.Holiday.Controls.CameraControl
             }
             else
             {
+                if (Logger.IsDebug())
+                {
+                    Logger.LogDebug("3st-person perspective");
+                }
                 thirdPersonFollow.Damping = initDamping;
                 thirdPersonFollow.ShoulderOffset = initShoulderOffset;
                 thirdPersonFollow.CameraDistance = initCameraDistance;
