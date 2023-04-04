@@ -20,8 +20,8 @@ namespace Extreal.SampleApp.Holiday.Controls.ClientControl
             builder.RegisterComponent(networkManager);
             builder.Register<NgoClient>(Lifetime.Singleton).WithParameter(assetHelper.NgoClientRetryStrategy);
 
-            builder.RegisterComponent(assetHelper.VivoxAppConfig);
-            builder.Register<VivoxClient>(Lifetime.Singleton);
+            // builder.RegisterComponent(assetHelper.VivoxAppConfig);
+            // builder.Register<VivoxClient>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<ClientControlPresenter>();
         }

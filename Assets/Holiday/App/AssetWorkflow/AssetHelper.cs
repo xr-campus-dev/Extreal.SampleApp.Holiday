@@ -6,7 +6,7 @@ using Extreal.Core.Common.System;
 using Extreal.Core.Logging;
 using Extreal.Core.StageNavigation;
 using Extreal.Integration.AssetWorkflow.Addressables;
-using Extreal.Integration.Chat.Vivox;
+// using Extreal.Integration.Chat.Vivox;
 using Extreal.Integration.Multiplay.NGO;
 using Extreal.SampleApp.Holiday.App.Config;
 using Extreal.SampleApp.Holiday.Screens.ConfirmationScreen;
@@ -23,7 +23,7 @@ namespace Extreal.SampleApp.Holiday.App.AssetWorkflow
         public IObservable<bool> OnConnectRetried => assetProvider.OnConnectRetried;
 
         public MessageConfig MessageConfig { get; private set; }
-        public VivoxAppConfig VivoxAppConfig { get; private set; }
+        // public VivoxAppConfig VivoxAppConfig { get; private set; }
         public NgoConfig NgoConfig { get; private set; }
         public IRetryStrategy NgoClientRetryStrategy { get; private set; }
         public AvatarConfig AvatarConfig { get; private set; }
@@ -53,7 +53,7 @@ namespace Extreal.SampleApp.Holiday.App.AssetWorkflow
                 assetDisposables.Clear();
                 MessageConfig = await LoadAndAddToDisposablesAsync<MessageConfig>();
                 AvatarConfig = await LoadAndAddToDisposablesAsync<AvatarConfig>();
-                VivoxAppConfig = await LoadAndReleaseAsync<ChatConfig, VivoxAppConfig>(asset => asset.VivoxAppConfig);
+                // VivoxAppConfig = await LoadAndReleaseAsync<ChatConfig, VivoxAppConfig>(asset => asset.VivoxAppConfig);
                 (NgoConfig, NgoClientRetryStrategy) =
                     await LoadAndReleaseAsync<MultiplayConfig, (NgoConfig, IRetryStrategy)>(
                         asset => (asset.NgoConfig, asset.RetryStrategy));
