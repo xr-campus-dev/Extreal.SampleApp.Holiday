@@ -40,7 +40,11 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
             stageDisposables.Add(multiplayRoom);
 
             multiplayRoom.IsPlayerSpawned
-                .Subscribe(appState.SetMultiplayReady)
+                .Subscribe(avatarPrefab =>
+                {
+                    appState.SetMultiplayReady(avatarPrefab != null);
+                    appState.SetAvatarPrefab(avatarPrefab);
+                })
                 .AddTo(stageDisposables);
 
             appState.SpaceReady
@@ -52,6 +56,7 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
         protected override void OnStageExiting(StageName stageName)
         {
             appState.SetMultiplayReady(false);
+            appState.SetAvatarPrefab(null);
             multiplayRoom.LeaveAsync().Forget();
         }
     }

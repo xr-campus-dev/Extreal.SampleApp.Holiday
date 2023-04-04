@@ -21,9 +21,9 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
 {
     public class MultiplayRoom : DisposableBase
     {
-        public IObservable<bool> IsPlayerSpawned => isPlayerSpawned;
+        public IObservable<GameObject> IsPlayerSpawned => isPlayerSpawned;
         [SuppressMessage("Usage", "CC0033")]
-        private readonly BoolReactiveProperty isPlayerSpawned = new BoolReactiveProperty(false);
+        private readonly ReactiveProperty<GameObject> isPlayerSpawned = new ReactiveProperty<GameObject>();
 
         private readonly NgoClient ngoClient;
         private readonly NgoConfig ngoConfig;
@@ -60,7 +60,7 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
             this.ngoClient.OnDisconnecting
                 .Subscribe(_ =>
                 {
-                    isPlayerSpawned.Value = false;
+                    isPlayerSpawned.Value = null;
                     ngoClient.UnregisterMessageHandler(MessageName.PlayerSpawned.ToString());
                 })
                 .AddTo(disposables);
@@ -108,8 +108,7 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
         {
             Controller(spawnedObject).AvatarAssetName.Value = spawnedMessage.AvatarAssetName;
             SetAvatarForExistingSpawnedObjects(ownerId: spawnedMessage.NetworkObjectId);
-            await SetAvatarAsync(spawnedObject, spawnedMessage.AvatarAssetName);
-            isPlayerSpawned.Value = true;
+            isPlayerSpawned.Value = await SetAvatarAsync(spawnedObject, spawnedMessage.AvatarAssetName);
         }
 
         private static NetworkThirdPersonController Controller(NetworkObject networkObject)
@@ -127,11 +126,12 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
             }
         }
 
-        private async UniTask SetAvatarAsync(NetworkObject networkObject, string avatarAssetName, bool restore = false)
+        private async UniTask<GameObject> SetAvatarAsync(NetworkObject networkObject, string avatarAssetName, bool restore = false)
         {
             var assetDisposable = await LoadAvatarAsync(avatarAssetName);
             var avatarObject = Object.Instantiate(assetDisposable.Result, networkObject.transform);
             Controller(networkObject).SetAvatar(avatarObject.GetComponent<AvatarProvider>().Avatar, restore);
+            return avatarObject;
         }
 
         public async UniTask<AssetDisposable<GameObject>> LoadAvatarAsync(string avatarAssetName)
