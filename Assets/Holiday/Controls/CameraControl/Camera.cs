@@ -59,7 +59,10 @@ namespace Extreal.SampleApp.Holiday.Controls.CameraControl
                 thirdPersonFollow.Damping = Vector3.zero;
                 thirdPersonFollow.ShoulderOffset = Vector3.zero;
                 thirdPersonFollow.CameraDistance = 0f;
-                avatarPrefab.SetActive(false);
+                if (avatarPrefab != null)
+                {
+                    avatarPrefab.SetActive(false);
+                }
             }
             else
             {
@@ -70,7 +73,10 @@ namespace Extreal.SampleApp.Holiday.Controls.CameraControl
                 thirdPersonFollow.Damping = initDamping;
                 thirdPersonFollow.ShoulderOffset = initShoulderOffset;
                 thirdPersonFollow.CameraDistance = initCameraDistance;
-                avatarPrefab.SetActive(true);
+                if (avatarPrefab != null)
+                {
+                    avatarPrefab.SetActive(true);
+                }
             }
         }
     }

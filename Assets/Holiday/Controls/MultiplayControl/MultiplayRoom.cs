@@ -64,6 +64,10 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
                     ngoClient.UnregisterMessageHandler(MessageName.PlayerSpawned.ToString());
                 })
                 .AddTo(disposables);
+
+            this.ngoClient.OnUnexpectedDisconnected
+                .Subscribe(_ => isPlayerSpawned.Value = null)
+                .AddTo(disposables);
         }
 
         protected override void ReleaseManagedResources()
