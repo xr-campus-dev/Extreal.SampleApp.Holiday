@@ -1,4 +1,4 @@
-﻿#if UNITY_STANDALONE
+﻿#if !UNITY_IOS && !UNITY_ANDROID
 using System.Diagnostics.CodeAnalysis;
 #endif
 using UnityEngine;
@@ -9,7 +9,7 @@ namespace Extreal.SampleApp.Holiday.Controls.MultiplayControl
     {
         [SerializeField] private GameObject joysticksCanvas;
 
-#if UNITY_STANDALONE
+#if !UNITY_IOS && !UNITY_ANDROID
         [SuppressMessage("Style", "IDE0051")]
         private void Awake()
             => joysticksCanvas.SetActive(false);
